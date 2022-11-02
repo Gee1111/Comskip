@@ -741,7 +741,7 @@ void audio_packet_process(VideoState *is, AVPacket *pkt)
  //       else
  //           avcodec_get_frame_defaults(is->frame);
 
-        len1 = avcodec_decode_audio4(is->audio_st->codec, is->frame, &got_frame, pkt_temp);
+        len1 = avcodec_decode_audio4(is->audio_st->codecpar, is->frame, &got_frame, pkt_temp);
 
         if (prev_codec_id != -1 && (unsigned int)prev_codec_id != is->audio_st->codecpar->codec_id)
         {
@@ -1234,7 +1234,7 @@ static int    prev_strange_framenum = 0;
     real_pts = 0.0;
     pts = 0;
     //is->video_st->codec.thread_type
-    if (!hardware_decode) is->video_st->codecpar->event_flags |= AV_CODEC_FLAG_GRAY;
+    if (!hardware_decode) is->video_st->event_flags |= AV_CODEC_FLAG_GRAY;
     // Decode video frame
     len1 = avcodec_decode_video2(is->video_st->codecpar, is->pFrame, &frameFinished,
                                  packet);
@@ -1847,7 +1847,7 @@ int stream_component_open(VideoState *is, int stream_index)
 #endif
         }
         if (codecCtx->codec_id == AV_CODEC_ID_MPEG1VIDEO)
-            is->video_st->codec->ticks_per_frame = 1;
+            is->video_st->codecpar->ticks_per_frame = 1;
         if (demux_pid)
             selected_video_pid = is->video_st->id;
         /*
@@ -2102,13 +2102,13 @@ void file_close()
 //    av_freep(&ist->hwaccel_device);
 
 
-    if (is->videoStream != -1) avcodec_close(is->pFormatCtx->streams[is->videoStream]->codec);
+    if (is->videoStream != -1) avcodec_close(is->pFormatCtx->streams[is->videoStream]->codecpar);
     is->videoStream = -1;
 //    avcodec_free_context(&is->pFormatCtx->streams[is->videoStream]->codec);
 
-    if (is->audioStream != -1) avcodec_close(is->pFormatCtx->streams[is->audioStream]->codec);
+    if (is->audioStream != -1) avcodec_close(is->pFormatCtx->streams[is->audioStream]->codecpar);
     is->audioStream = -1;
-    if (is->subtitleStream != -1)  avcodec_close(is->pFormatCtx->streams[is->subtitleStream]->codec);
+    if (is->subtitleStream != -1)  avcodec_close(is->pFormatCtx->streams[is->subtitleStream]->codecpar);
     is->subtitleStream = -1;
 //    is->pFormatCtx = NULL;
 
@@ -2403,7 +2403,7 @@ nextpacket:
 
                     if ((live_tv && retries < live_tv_retries) /* || (selftest == 3 && retries == 0) */)
                     {
-                        double frame_delay = av_q2d(is->video_st->codec->time_base) * is->video_st->codec->ticks_per_frame;
+                        double frame_delay = av_q2d(is->video_st->codecpar->time_base) * is->video_st->codecpar->ticks_per_frame;
 //                    uint64_t retry_target;
                         if (retries == 0)
                         {

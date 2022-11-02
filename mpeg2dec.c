@@ -1275,7 +1275,7 @@ static int    prev_strange_framenum = 0;
             is->pFrame = newframe;
         }
 
-        if(is->video_st->codec->framerate.den && is->video_st->codec->framerate.num)
+        if(is->AVStream->codecpar->framerate.den && is->AVStream->codecpar->framerate.num)
         {
             frame_delay = (1/ av_q2d(is->video_st->codec->framerate) ) /* * is->video_st->codec->ticks_per_frame */ ;
         }

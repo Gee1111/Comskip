@@ -1275,13 +1275,13 @@ static int    prev_strange_framenum = 0;
             is->pFrame = newframe;
         }
 
-        if(is->video_st->codecpar->framerate.den && is->video_st->codecpar->framerate.num)
+        if(is->video_st->avcodec->framerate.den && is->video_st->avcodec->framerate.num)
         {
-            frame_delay = (1/ av_q2d(is->video_st->codecpar->framerate) ) /* * is->video_st->codec->ticks_per_frame */ ;
+            frame_delay = (1/ av_q2d(is->video_st->avcodec->framerate) ) /* * is->video_st->codec->ticks_per_frame */ ;
         }
         else
         {
-           frame_delay = av_q2d(is->video_st->codec->time_base) * is->video_st->codec->ticks_per_frame ;
+           frame_delay = av_q2d(is->video_st->codecpar->time_base) * is->video_st->codecpar->ticks_per_frame ;
         }
 
 //        frame_delay = av_q2d(is->video_st->codec->time_base) * is->video_st->codec->ticks_per_frame ;

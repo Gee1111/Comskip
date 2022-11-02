@@ -1281,7 +1281,7 @@ static int    prev_strange_framenum = 0;
         }
         else
         {
-           frame_delay = av_q2d(is->dec_ctxpar->time_base) * is->dec_ctxpar->ticks_per_frame ;
+           frame_delay = av_q2d(is->dec_ctx->time_base) * is->dec_ctx->ticks_per_frame ;
         }
 
 //        frame_delay = av_q2d(is->video_st->codec->time_base) * is->video_st->codec->ticks_per_frame ;

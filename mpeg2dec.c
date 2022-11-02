@@ -1234,9 +1234,9 @@ static int    prev_strange_framenum = 0;
     real_pts = 0.0;
     pts = 0;
     //is->video_st->codec.thread_type
-    if (!hardware_decode) is->video_st->codec->flags |= AV_CODEC_FLAG_GRAY;
+    if (!hardware_decode) is->video_st->codecpar->flags |= AV_CODEC_FLAG_GRAY;
     // Decode video frame
-    len1 = avcodec_decode_video2(is->video_st->codec, is->pFrame, &frameFinished,
+    len1 = avcodec_decode_video2(is->video_st->codecpar, is->pFrame, &frameFinished,
                                  packet);
 
     if (len1<0)
@@ -1281,7 +1281,7 @@ static int    prev_strange_framenum = 0;
         }
         else
         {
-           frame_delay = av_q2d(is->video_st->time_base) * is->AVCodecContext->video_st->ticks_per_frame ;
+           frame_delay = av_q2d(is->video_st->time_base) * is->video_st->ticks_per_frame ;
         }
 
 //        frame_delay = av_q2d(is->video_st->codec->time_base) * is->video_st->codec->ticks_per_frame ;
@@ -1401,8 +1401,8 @@ static int    prev_strange_framenum = 0;
         pts_offset *= 0.9;
         if (!reviewing && timeline_repair) {
             if (framenum > 1 && fabs(calculated_delay - pts_offset - frame_delay) < 1.0) { // Allow max 0.5 second timeline jitter to be compensated
-                if (!ISSAME(3*frame_delay/ is->video_st->codec->ticks_per_frame, calculated_delay))
-                    if (!ISSAME(1*frame_delay/ is->video_st->codec->ticks_per_frame, calculated_delay))
+                if (!ISSAME(3*frame_delay/ is->video_st->codecpar->ticks_per_frame, calculated_delay))
+                    if (!ISSAME(1*frame_delay/ is->video_st->codecpar->ticks_per_frame, calculated_delay))
                         pts_offset = pts_offset + frame_delay - calculated_delay;
             }
         }
@@ -1417,9 +1417,9 @@ static int    prev_strange_framenum = 0;
 
         if (!reviewing
             && framenum > 1 && fabs(calculated_delay - frame_delay) > 0.01
-            && !ISSAME(3*frame_delay/ is->video_st->codec->ticks_per_frame, calculated_delay)
-            && !ISSAME(2*frame_delay/ is->video_st->codec->ticks_per_frame, calculated_delay)
-            && !ISSAME(1*frame_delay/ is->video_st->codec->ticks_per_frame, calculated_delay)
+            && !ISSAME(3*frame_delay/ is->video_st->codecpar->ticks_per_frame, calculated_delay)
+            && !ISSAME(2*frame_delay/ is->video_st->codecpar->ticks_per_frame, calculated_delay)
+            && !ISSAME(1*frame_delay/ is->video_st->codecpar->ticks_per_frame, calculated_delay)
             ){
             if ( (prev_strange_framenum + 1 != framenum) &&( prev_strange_step < fabs(calculated_delay - frame_delay))) {
                 Debug(8 ,"Strange video pts step of %6.5f instead of %6.5f at frame %d\n", calculated_delay+0.0000005, frame_delay+0.0000005, framenum); // Unknown strange step
@@ -1667,7 +1667,7 @@ int stream_component_open(VideoState *is, int stream_index)
 
     // Get a pointer to the codec context for the video stream
 
-    codecCtx = pFormatCtx->streams[stream_index]->codec;
+    codecCtx = pFormatCtx->streams[stream_index]->codecpar;
     avcodec_close(codecCtx);
 
     if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO)

@@ -1069,11 +1069,11 @@ again:
     {
         if(is->audioStream >= 0)
         {
-            avcodec_flush_buffers(is->audio_st->codec);
+            avcodec_flush_buffers(is->audio_st->codecpar);
         }
         if(is->videoStream >= 0)
         {
-            avcodec_flush_buffers(is->video_st->codec);
+            avcodec_flush_buffers(is->video_st->codecpar);
         }
     }
     is->seek_no_flush = 0;

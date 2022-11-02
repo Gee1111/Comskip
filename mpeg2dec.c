@@ -1234,7 +1234,7 @@ static int    prev_strange_framenum = 0;
     real_pts = 0.0;
     pts = 0;
     //is->video_st->codec.thread_type
-    if (!hardware_decode) is->video_st->codecpar->flags |= AV_CODEC_FLAG_GRAY;
+    if (!hardware_decode) is->video_st->codecpar->event_flags |= AV_CODEC_FLAG_GRAY;
     // Decode video frame
     len1 = avcodec_decode_video2(is->video_st->codecpar, is->pFrame, &frameFinished,
                                  packet);

@@ -1649,96 +1649,21 @@ static int get_buffer(AVCodecContext *s, AVFrame *frame, int flags)
 
 int stream_component_open(VideoState *is, int stream_index)
 {
-
     AVFormatContext *pFormatCtx = is->pFormatCtx;
     AVCodecContext *codecCtx;
     AVCodec *codec;
     AVCodec *codec_hw = NULL;
-
-
-
     if(stream_index < 0 || (unsigned int)stream_index >= pFormatCtx->nb_streams)
     {
         return -1;
     }
-
     if (strcmp(pFormatCtx->iformat->name, "mpegts")==0)
         demux_pid = 1;
-
     // Get a pointer to the codec context for the video stream
-
-    codecCtx = pFormatCtx->streams[stream_index]->codecpar;
+    codecCtx = pFormatCtx->streams[stream_index]->codec;
     avcodec_close(codecCtx);
 
-    if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO)
-    {
-        if (!hardware_decode) codecCtx->flags |= AV_CODEC_FLAG_GRAY;
-        is->dec_ctx = codecCtx;
-#ifdef HARDWARE_DECODE
-        ist->dec_ctx = codecCtx;
-        ist->dec_ctx->opaque = ist;
-        ist->dec_ctx->get_format            = get_format;
-        ist->dec_ctx->get_buffer2           = get_buffer;
-//        ist->dec_ctx->thread_safe_callbacks = 1;
-        ist->hwaccel_id = -1; //HWACCEL_AUTO;
-        if (hardware_decode) {
-#ifdef DONATOR
-            ist->hwaccel_id = HWACCEL_AUTO;
-#else
-            Debug(0, "Hardware accelerated video decoding is only available in the Donator version\n");
-#endif
-        }
-#endif
-
-//        codecCtx->flags2 |= CODEC_FLAG2_FAST /* | AV_CODEC_FLAG2_SHOW_ALL */ ;
-//        codecCtx->flags2 |= AV_CODEC_FLAG2_CHUNKS /* | AV_CODEC_FLAG2_SHOW_ALL */ ;
-
-
-
-        if (codecCtx->codec_id != AV_CODEC_ID_MPEG1VIDEO) {
-
-#ifdef DONATOR
-           codecCtx->thread_count= thread_count;
-#else
-            codecCtx->thread_count= 1;
-#endif
-        }
-
-        if (codecCtx->codec_id == AV_CODEC_ID_H264) {
-            is_h264 = 1;
-#ifdef DONATOR
-#else
-            Debug(0, "h.264 video can only be processed at full speed by the Donator version\n");
-#endif
-        }
-        else
-        {
-#ifdef DONATOR
-            int w;
-            if (lowres == 10) {
-                w = codecCtx->width;
-                lowres = 0;
-                while (w > 600) {
-                    w = w >> 1;
-                    lowres++;
-                }
-            }
- //           codecCtx->lowres = lowres;
-#endif
-//            /* if(lowres) */ codecCtx->flags |= CODEC_FLAG_EMU_EDGE;
-        }
-//        codecCtx->flags2 |= CODEC_FLAG2_FAST;
-
-        if (codecCtx->codec_id != AV_CODEC_ID_MPEG1VIDEO) {
-#ifdef DONATOR
-           codecCtx->thread_count= thread_count;
-#else
-            codecCtx->thread_count= 1;
-#endif
-        }
-    }
-
-codec = avcodec_find_decoder(codecCtx->codec_id);
+	codec = avcodec_find_decoder(codecCtx->codec_id);
 
 	// If decoding in hardware try if running on a Raspberry Pi and then use it's decoder instead.
     if (hardware_decode) {
@@ -1773,14 +1698,27 @@ codec = avcodec_find_decoder(codecCtx->codec_id);
 		if (codecCtx->codec_id == AV_CODEC_ID_HEVC && avcodec_find_decoder_by_name("hevc_dxva2") != NULL) codec_hw = avcodec_find_decoder_by_name("hevc_dxva2");
     }
 
-  if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO)
-    {
-        if (!hardware_decode) codecCtx->flags |= AV_CODEC_FLAG_GRAY;
-	int stream_component_open(VideoState *is, int stream_index)
-		     }
+    if (codec_hw != NULL && codec_hw != codec) {
+        fprintf(stderr, "Using Codec: %s instead of %s\n", codec_hw->name, codec->name);
+        codec = codec_hw;
     }
 
-    if (!hardware_decode) av_dict_set_int(&myoptions, "gray", 1, 0);
+   if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO)
+    {
+        if (!hardware_decode) codecCtx->flags |= AV_CODEC_FLAG_GRAY;
+	is->dec_ctx = codecCtx;
+ifdef HARDWARE_DECODE
+        ist->dec_ctx = codecCtx;
+        ist->dec_ctx->opaque = ist;
+        ist->dec_ctx->get_format            = get_format;
+        ist->dec_ctx->get_buffer2           = get_buffer;
+//        ist->dec_ctx->thread_safe_callbacks = 1;
+        ist->hwaccel_id = -1; //HWACCEL_AUTO;
+      if (hardware_decode) {
+            ist->hwaccel_id = HWACCEL_AUTO;
+endif
+        }
+endif
 
 
  //       av_dict_set_int(&myoptions, "fastint", 1, 0);

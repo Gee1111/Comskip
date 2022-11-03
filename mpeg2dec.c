@@ -94,7 +94,7 @@ typedef struct VideoPicture
 typedef struct VideoState
 {
     AVFormatContext *pFormatCtx;
-    AVCodecContext *dec_ctx;
+    AVCodecContext *dec_ctx, *audio_ctx, *subtitle_ctx;
     int             videoStream, audioStream, subtitleStream;
 
     int             av_sync_type;
@@ -741,7 +741,7 @@ void audio_packet_process(VideoState *is, AVPacket *pkt)
  //       else
  //           avcodec_get_frame_defaults(is->frame);
 
-        len1 = avcodec_decode_audio4(is->audio_st->codecpar, is->frame, &got_frame, pkt_temp);
+        len1 = avcodec_decode_audio4(is->audio_ctx, is->frame, &got_frame, pkt_temp);
 
         if (prev_codec_id != -1 && (unsigned int)prev_codec_id != is->audio_st->codecpar->codec_id)
         {
@@ -1069,7 +1069,7 @@ again:
     {
         if(is->audioStream >= 0)
         {
-            avcodec_flush_buffers(is->audio_st->codecpar);
+            avcodec_flush_buffers(is->audio_ctx);
         }
         if(is->videoStream >= 0)
         {
@@ -1738,8 +1738,7 @@ int stream_component_open(VideoState *is, int stream_index)
         }
     }
 
-
-	codec = avcodec_find_decoder(codecCtx->codec_id);
+codec = avcodec_find_decoder(codecCtx->codec_id);
 
 	// If decoding in hardware try if running on a Raspberry Pi and then use it's decoder instead.
     if (hardware_decode) {
@@ -1774,6 +1773,13 @@ int stream_component_open(VideoState *is, int stream_index)
 		if (codecCtx->codec_id == AV_CODEC_ID_HEVC && avcodec_find_decoder_by_name("hevc_dxva2") != NULL) codec_hw = avcodec_find_decoder_by_name("hevc_dxva2");
     }
 
+  if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO)
+    {
+        if (!hardware_decode) codecCtx->flags |= AV_CODEC_FLAG_GRAY;
+	int stream_component_open(VideoState *is, int stream_index)
+		     }
+    }
+
     if (!hardware_decode) av_dict_set_int(&myoptions, "gray", 1, 0);
 
 
@@ -1797,12 +1803,14 @@ int stream_component_open(VideoState *is, int stream_index)
     case AVMEDIA_TYPE_SUBTITLE:
         is->subtitleStream = stream_index;
         is->subtitle_st = pFormatCtx->streams[stream_index];
+	is->subtitle_ctx = codecCtx;
         if (demux_pid)
             selected_subtitle_pid = is->subtitle_st->id;
         break;
     case AVMEDIA_TYPE_AUDIO:
         is->audioStream = stream_index;
         is->audio_st = pFormatCtx->streams[stream_index];
+	is->audio_ctx = codecCtx;
 //          is->audio_buf_size = 0;
 //          is->audio_buf_index = 0;
 
@@ -1820,7 +1828,7 @@ int stream_component_open(VideoState *is, int stream_index)
     case AVMEDIA_TYPE_VIDEO:
         is->videoStream = stream_index;
         is->video_st = pFormatCtx->streams[stream_index];
-
+	is->dec_ctx = codecCtx;
 //          is->frame_timer = (double)av_gettime() / 1000000.0;
 //          is->frame_last_delay = 40e-3;
 //          is->video_current_pts_time = av_gettime();
@@ -2102,13 +2110,13 @@ void file_close()
 //    av_freep(&ist->hwaccel_device);
 
 
-    if (is->videoStream != -1) avcodec_close(is->pFormatCtx->streams[is->videoStream]->codecpar);
+    if (is->dec_ctx) avcodec_close(is->dec_ctx);
     is->videoStream = -1;
 //    avcodec_free_context(&is->pFormatCtx->streams[is->videoStream]->codec);
 
-    if (is->audioStream != -1) avcodec_close(is->pFormatCtx->streams[is->audioStream]->codecpar);
+    if (is->audio_ctx) avcodec_close(is->audio_ctx);
     is->audioStream = -1;
-    if (is->subtitleStream != -1)  avcodec_close(is->pFormatCtx->streams[is->subtitleStream]->codecpar);
+    if (is->subtitle_ctx)  avcodec_close(is->subtitle_ctx);
     is->subtitleStream = -1;
 //    is->pFormatCtx = NULL;
 

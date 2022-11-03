@@ -1667,7 +1667,7 @@ int stream_component_open(VideoState *is, int stream_index)
 
     // Get a pointer to the codec context for the video stream
 
-    codecCtx = pFormatCtx->streams[stream_index]->codec;
+    codecCtx = pFormatCtx->streams[stream_index]->codecpar;
     avcodec_close(codecCtx);
 
     if (codecCtx->codec_type == AVMEDIA_TYPE_VIDEO)

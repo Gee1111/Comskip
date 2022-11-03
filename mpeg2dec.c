@@ -1708,12 +1708,12 @@ int stream_component_open(VideoState *is, int stream_index)
         if (!hardware_decode) codecCtx->flags |= AV_CODEC_FLAG_GRAY;
 	is->dec_ctx = codecCtx;
 ifdef HARDWARE_DECODE
-        ist->dec_ctx = codecCtx;
-        ist->dec_ctx->opaque = ist;
-        ist->dec_ctx->get_format            = get_format;
-        ist->dec_ctx->get_buffer2           = get_buffer;
+        is->dec_ctx = codecCtx;
+        is->dec_ctx->opaque = ist;
+        is->dec_ctx->get_format            = get_format;
+        is->dec_ctx->get_buffer2           = get_buffer;
 //        ist->dec_ctx->thread_safe_callbacks = 1;
-        ist->hwaccel_id = -1; //HWACCEL_AUTO;
+        is->hwaccel_id = -1; //HWACCEL_AUTO;
       if (hardware_decode) {
             ist->hwaccel_id = HWACCEL_AUTO;
 endif

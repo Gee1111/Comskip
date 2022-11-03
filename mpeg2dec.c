@@ -1660,7 +1660,7 @@ int stream_component_open(VideoState *is, int stream_index)
     if (strcmp(pFormatCtx->iformat->name, "mpegts")==0)
         demux_pid = 1;
     // Get a pointer to the codec context for the video stream
-    codecCtx = pFormatCtx->streams[stream_index]->codec;
+    codecCtx = pFormatCtx->streams[stream_index]->codecpar;
     avcodec_close(codecCtx);
 
 	codec = avcodec_find_decoder(codecCtx->codec_id);
